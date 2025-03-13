@@ -1,16 +1,17 @@
-process FRED_MAKE_PSEUDOUNIQ{
+process FRED_PSEUDOUNIQ{
     container (workflow.containerEngine ? "merszym/bam_deam:nextflow" : null)
-    tag "${meta.id}:${meta.Taxon}:${meta.Species}"
+    tag "${meta.id}"
     label 'local'
 
     input:
-    tuple val(meta), path(bam1), path(bam3), path(bam)
+    tuple val(meta), path(bam)
 
     output:
-    tuple val(meta), path("masked_${bam1}"), path("masked_${bam3}"), path("masked_${bam}"), emit: bam
+    tuple val(meta), path("${meta.sample}.noPCRdups.bam"), path("${meta.id}.pseudouniq_stats.txt"), emit: pseudouniq
 
     script:
+    def args = task.ext.args ?: ''
     """
-    fred_remove_dups.py
+    fred_remove_dups.py ${bam} ${meta.sample}.noPCRdups.bam $args > ${meta.id}.pseudouniq_stats.txt
     """
 }

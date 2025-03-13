@@ -1,13 +1,16 @@
-include { BLAST_RUN } from './modules/local/blast_run'
-include { BLAST_INDEX_DB } from './modules/local/blast_indexdb'
+include { FRED_PSEUDOUNIQ } from './modules/local/fred_remove_duplicates'
 include { SAMTOOLS_FASTA } from './modules/local/samtools_fasta'
+include { BLAST_INDEX_DB } from './modules/local/blast_indexdb'
+include { BLAST_RUN } from './modules/local/blast_run'
+include { BLAST2RMA } from './modules/local/blast2rma'
 
 
 // load the files
 
-
 ch_split = Channel.fromPath("${params.split}/*", checkIfExists:true)
 ch_database = Channel.fromPath("${params.database}", checkIfExists:true)
+ch_acc2taxid = Channel.fromPath("${params.acc2taxid}", checkIfExists:true)
+
 ch_versions = Channel.empty()
 
 workflow {
@@ -15,11 +18,28 @@ workflow {
 // add a fake meta
 ch_split.map{it -> [['sample': it.baseName, 'id':it.baseName], it] }.set{ ch_split }
 
+
 //
-// 1. Convert bam to fasta
+// 0. Remove Singletons (pseudouniq-step + filtering)
 //
 
-SAMTOOLS_FASTA(ch_split)
+
+FRED_PSEUDOUNIQ(ch_split)
+
+ch_pseudouniq = FRED_PSEUDOUNIQ.out.pseudouniq
+
+ch_pseudouniq.map{meta, bam, stats -> 
+    [
+        meta+stats.splitCsv(sep:'\t', header:true).first(),
+        bam
+    ]
+}.set{ ch_pseudouniq }
+
+//
+// 1. Convert bam to fasta (for blast)
+//
+
+SAMTOOLS_FASTA(ch_pseudouniq)
 
 ch_fasta = SAMTOOLS_FASTA.out.fasta
 ch_versions = ch_versions.mix(SAMTOOLS_FASTA.out.versions.first())
@@ -47,5 +67,21 @@ BLAST_RUN(ch_blastin.fasta, ch_blastdb )
 
 ch_blastout = BLAST_RUN.out.blastout
 ch_versions = ch_versions.mix(BLAST_RUN.out.versions.first())
+
+// blast2rma
+
+// here we need the fasta-file, the blastout and the acc2taxid-map
+ch_blastout.combine(ch_fasta, by:0) //merge by meta
+  .combine(ch_acc2taxid)
+  .multiMap{meta, blastout, fasta, a2t -> 
+    fasta: [meta, fasta]
+    blastout: blastout
+    a2t:a2t
+  }
+  .set{ch_b2rma_in}
+
+BLAST2RMA( ch_b2rma_in.fasta, ch_b2rma_in.blastout, ch_b2rma_in.a2t  )
+
+BLAST2RMA.out.rma.view()
 
 }
