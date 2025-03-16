@@ -3,7 +3,7 @@ include { SAMTOOLS_FASTA } from './modules/local/samtools_fasta'
 include { BLAST_INDEX_DB } from './modules/local/blast_indexdb'
 include { BLAST_RUN } from './modules/local/blast_run'
 include { BLAST2RMA } from './modules/local/blast2rma'
-
+include { MEGAN_RMA2INFO } from './modules/local/megan_metagen'
 
 // load the files
 
@@ -82,6 +82,12 @@ ch_blastout.combine(ch_fasta, by:0) //merge by meta
 
 BLAST2RMA( ch_b2rma_in.fasta, ch_b2rma_in.blastout, ch_b2rma_in.a2t  )
 
-BLAST2RMA.out.rma.view()
+ch_rma6 = BLAST2RMA.out.rma
+
+//
+// 3. Run metagen
+//
+
+MEGAN_RMA2INFO(ch_rma6)
 
 }

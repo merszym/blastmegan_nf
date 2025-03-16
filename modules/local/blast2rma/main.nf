@@ -1,7 +1,7 @@
 process BLAST2RMA{
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/megan:6.25.10--h9ee0642_0' :
-        'quay.io/biocontainers/megan:6.25.10--h9ee0642_0' }"
+        'https://depot.galaxyproject.org/singularity/megan:6.12.3--0' :
+        'quay.io/biocontainers/megan:6.12.3--0' }"
     
     tag "$meta.id"
 
@@ -18,8 +18,7 @@ process BLAST2RMA{
     def args = task.ext.args ?: ''
     """
     blast2rma \
-       -f BlastText \
-       -bm BlastN \
+       -f BlastTab \
        -i ${blastout} \
        -r ${fasta} \
        -a2t ${accession2taxid} \
@@ -28,7 +27,7 @@ process BLAST2RMA{
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        blast2rma: \$(echo "MEGAN CE (v 6.25.10)")
+        blast2rma: \$(echo "MEGAN CE (v 6.12.3)")
     END_VERSIONS
     """
 }
