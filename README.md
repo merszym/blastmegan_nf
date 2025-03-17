@@ -48,6 +48,6 @@ nextflow run merszym/blastmegan_nf \
 
 ### Acknowledgments
 
-The pipeline was developed by [Frederic Romagne](https://github.com/frederic-romagne) and described in Slon et al. (2017).
+The original pipeline was developed by [Frederic Romagne](https://github.com/frederic-romagne) and described in Slon et al. (2017).
 
 > Viviane Slon et al., _Neandertal and Denisovan DNA from Pleistocene sediments._ Science356,605-608 (2017).[10.1126/science.aam9695](https://doi.org/10.1126/science.aam9695)
