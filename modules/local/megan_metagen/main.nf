@@ -8,9 +8,9 @@ process MEGAN_RMA2INFO{
     tuple val(meta), path(rma6)
 
     output:
-    tuple val(meta), path("${meta.sample}.tsv"), emit: tsv
-    tuple val(meta), path("*.fasta")           , emit: fasta 
-    path "versions.yml"                        , emit: versions
+    tuple val(meta), path("${meta.sample}.tsv")     , emit: tsv
+    tuple val(meta), path("*.fasta") ,optional: true, emit: fasta 
+    path "versions.yml"                             , emit: versions
 
     script:
     def args = task.ext.args ?: ''
@@ -20,7 +20,7 @@ process MEGAN_RMA2INFO{
     
 
     for fam in \$(cut -f1 ${meta.sample}.tsv); do
-        read-extractor -i ${rma6} -c Taxonomy -n \$fam --allBelow > ${meta.sample}_reads-\$fam.fasta;
+        read-extractor -i ${rma6} -c Taxonomy -n \$fam --allBelow | grep "^[>A-Z]" > ${meta.sample}_reads-\$fam.fasta;
     done
     
 
